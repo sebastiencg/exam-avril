@@ -42,4 +42,11 @@ class RegistrationController extends AbstractController
         }
         return $this->json("error");
     }
+
+    #[Route('/api/profile', name: 'app_profile',methods: ['GET'])]
+    public function index(): Response
+    {
+        return $this->json($this->getUser()->getProfile(),200,[],['groups'=>'group:order-all']);
+
+    }
 }
