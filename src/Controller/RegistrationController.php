@@ -27,7 +27,7 @@ class RegistrationController extends AbstractController
         if ($user) {
             $check= $userRepository->findBy(["username"=>$user->getUsername()]);
             if($check){
-                return $this->json("le username ". $user->getUsername() ." est deja pris");
+                return $this->json("le username ". $user->getUsername() ." est deja pris",400);
             }
             $user->setPassword(
                 $userPasswordHasher->hashPassword($user,$user->getPassword())

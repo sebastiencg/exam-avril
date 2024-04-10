@@ -88,6 +88,56 @@ class OrderController extends AbstractController
 
 
     }
+
+    #[Route('/total', name: 'app_order_total' ,methods: ['POST'])]
+    public function total(Request $request,ProductRepository $productRepository,EntityManagerInterface $entityManager): Response
+    {
+        $json = $request->getContent();
+        $decodedData = json_decode($json, true);
+
+
+        $total = 0;
+
+        foreach ($decodedData as $item) {
+            if (!isset($item['id']) || !is_array($item['id'])) {
+                $entityManager->rollback(); // Annuler la transaction
+                return $this->json(["error" => "Format JSON invalide"], 400);
+            }
+
+            foreach ($item['id'] as $productInfo) {
+                // Vérifie si $productInfo est un tableau avec une seule paire clé-valeur
+                if (!is_array($productInfo) || count($productInfo) !== 1) {
+                    $entityManager->rollback(); // Annuler la transaction
+                    return $this->json(["error" => "Format des informations produit invalide"], 400);
+                }
+
+                $productId = key($productInfo); // Clé = identifiant du produit
+                $newQuantity = current($productInfo); // Valeur = quantité du produit
+
+                // Recherche du produit par son identifiant
+                $product = $productRepository->find($productId);
+
+                if (!$product) {
+                    return $this->json(["error" => "Produit avec l'ID $productId introuvable"], 404);
+                }
+
+                if ($newQuantity < 0) {
+                    return $this->json(["error" => "La quantité du produit $productId est inférieure à 0"], 400);
+                }
+
+
+
+                $total += $newQuantity * $product->getPrice();
+            }
+        }
+
+
+        return $this->json($total, 200, [], ['groups' => 'group:order-all']);
+
+
+    }
+
+
     #[Route('/admin', name: 'app_order_admin')]
     public function indexAdmin(OrderRepository $orderRepository): Response
     {
