@@ -34,16 +34,14 @@ class OrderController extends AbstractController
         $order = new Order();
         $order->setProfile($this->getUser()->getProfile());
 
-        foreach ($decodedData as $item) {
-            if (!isset($item['id']) || !is_array($item['id'])) {
+            if (!isset($order['id']) || !is_array($order['id'])) {
                 $entityManager->rollback(); // Annuler la transaction
                 return $this->json(["error" => "Format JSON invalide"], 400);
             }
 
-            foreach ($item['id'] as $productInfo) {
+            foreach ($order['id'] as $productInfo) {
                 // Vérifie si $productInfo est un tableau avec une seule paire clé-valeur
                 if (!is_array($productInfo) || count($productInfo) !== 1) {
-                    $entityManager->rollback(); // Annuler la transaction
                     return $this->json(["error" => "Format des informations produit invalide"], 400);
                 }
 
@@ -55,7 +53,6 @@ class OrderController extends AbstractController
                 $product = $productRepository->find($productId);
 
                 if (!$product) {
-                    $entityManager->rollback(); // Annuler la transaction
                     return $this->json(["error" => "Produit avec l'ID $productId introuvable"], 404);
                 }
 
@@ -75,7 +72,7 @@ class OrderController extends AbstractController
 
                 $total += $orderProduct->getTotal();
             }
-        }
+
 
         $order->setTotal($total);
 
@@ -98,16 +95,13 @@ class OrderController extends AbstractController
 
         $total = 0;
 
-        foreach ($decodedData as $item) {
-            if (!isset($item['id']) || !is_array($item['id'])) {
-                $entityManager->rollback(); // Annuler la transaction
+            if (!isset($decodedData['id']) || !is_array($decodedData['id'])) {
                 return $this->json(["error" => "Format JSON invalide"], 400);
             }
 
-            foreach ($item['id'] as $productInfo) {
+            foreach ($decodedData['id'] as $productInfo) {
                 // Vérifie si $productInfo est un tableau avec une seule paire clé-valeur
                 if (!is_array($productInfo) || count($productInfo) !== 1) {
-                    $entityManager->rollback(); // Annuler la transaction
                     return $this->json(["error" => "Format des informations produit invalide"], 400);
                 }
 
@@ -129,7 +123,7 @@ class OrderController extends AbstractController
 
                 $total += $newQuantity * $product->getPrice();
             }
-        }
+
 
 
         return $this->json($total, 200, [], ['groups' => 'group:order-all']);
